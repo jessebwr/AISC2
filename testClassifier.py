@@ -9,15 +9,16 @@ import os
 import re
 import sc2reader
 from gamelog import *
-from sc2reader.exceptions import MPQError, CorruptTrackerFileError
+from classifier import eventClassifier
+from sc2reader.exceptions import MPQError
 from sklearn.preprocessing import StandardScaler
 from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.grid_search import GridSearchCV
 from sklearn.svm import SVC
 
-
-mainPath = 'C:\Users\Henry\Documents\HMC Junior\AI\AISC2\Replays'
+mainPath = 'C:\Users\Henry\Documents\HMC Junior\AI\AISC2' 
+relayPath = os.path.join(mainPath, 'Replays')
 
 #The SC2 engine runs at 16 frames per second
 framesPerMinute = 960
@@ -27,6 +28,23 @@ fpr = 16
 pattern = r"(?<=\().+?(?=\))"
 #Race classification dictionary
 race = {"Protoss":0, "Terran":1, "Zerg":2}
+
+def abilityID(event):
+    """
+    Returns the event's ability ID. This function is passed to gamelog to
+    classify events accoring to ability ID.
+    """
+    if hasattr(event, 'ability_id'):
+        return u'%i' % event.ability_id
+    else:
+        return None 
+
+#The classifier we use to assign events to columns
+archive = os.path.join(mainPath, 'abilities.txt')
+with open(archive, 'r') as infile:
+    abilities = json.load(infile)
+abilityidClassifier = eventClassifier(abilities, abilityID)
+log = gamelog(abilityidClassifier, end=frames, framesPerRow=frames)
 
 #Load and parse the training data
 def parseData(path):
@@ -42,6 +60,7 @@ def parseData(path):
             try:
                 replay = sc2reader.load_replay(fullpath)
                 print "Loading replay %s" % replay.filename
+                log.loadReplay(replay)
                 #Get data from the first 5 minutes of the replay
                 frames = 5*framesPerMinute
                 if replay.frames >= frames and len(replay.players) == 2:
@@ -50,14 +69,17 @@ def parseData(path):
                     if player1race.group(0) in race and player2race.group(0) in race:
                         targets.append(race[player1race.group(0)])
                         targets.append(race[player2race.group(0)])
-                        data.append(gamelog(replay, endFrame=frames).getColumn(0))
-                        data.append(gamelog(replay, endFrame=frames).getColumn(1))
-            except:
+                        data.append(gamelog(replay, endFrame=frames, classify=abilityID, framesPerRow=frames).getColumn(0))
+                        data.append(gamelog(replay, endFrame=frames, classify=abilityID, framesPerRow=frames).getColumn(1))
+            except MPQError:
                 print "Failed to load replay %s" % fullpath 
     return (data, targets)
     
-#Parse the data and split into train/test sets
-data, targets = parseData(mainPath)
+#Parse the data and split into train/test sets. Store data. 
+data, targets = parseData(replayPath)
+print "Saving data. . ."
+np.save('X_abilityid', data)
+np.save('y_abilityid', targets)
 print "Splitting data. . ."
 X_train, X_test, y_train, y_test = \
 train_test_split(data, targets, test_size = 0.30, random_state = 42)

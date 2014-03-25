@@ -5,6 +5,9 @@
 #replay files as a sparse matrix of integers.
 
 import numpy as np
+from __future__ import division
+from math import ceil, floor
+from classifier import *
 
 class gamelog:
     """
@@ -17,35 +20,70 @@ class gamelog:
     j was executed during the time frame i.  
     """
     
-    def __init__(self, replay, classify=lambda x : x.pid, startFrame = 0, endFrame = None, framesPerRow=16):
+    def __init__(self,classifier,replay=None,start=0,end=None,framesPerRow=16):
         """
         Extracts and stores data about the replay into an instance of gamelog.
         The events of the replay file are stored within a matrix. 
         """
-        #Crops the event log using the specified frames.
-        #This is necessary to use the event log data as a feature vector for 
-        #classification.
-        self.start = startFrame
-        if endFrame:
-            self.end = endFrame
-        else:
-            self.end = replay.frames
-           
-        #The dimensions of the event matrix. fpr is how many frames are 
-        #represented in each row. 
-        self.fpr = framesPerRow
-        self.players = len(replay.players)
-        self.rows = (self.end - self.start)/self.fpr + 1
-        self.columns = self.players
-        self.shape = (self.rows, self.columns)
+        #Crops the event log using the specified frames. This is necessary to 
+        #use the event matrix as a feature vector for classification.
+        self.start = start
         
-        #Populate the matrix with data from the replay's event log. 
-        self.matrix = np.zeros(self.shape)  
+        if end: #Use the provided argument
+            self.end = end
+        elif not replay: #The log was initialized with no replay. Start = End.
+            assert start == 0
+            end = 0
+        else: #Use the whole replay 
+            self.end = replay.frames
+            
+        #The classifier sorts events into columns of the matrix
+        self.classifier = classifier
+           
+        self.fpr = framesPerRow
+        self.initializeMatrix()
+        
+        if self.replay:
+            self.loadReplay(replay)
+            
+    def initializeMatrix(self):
+        """
+        Sets the event matrix to a matrix of zeroes.
+        """
+        self.rows = ceil((self.end - self.start)/self.fpr)
+        self.columns = len(self.classifier.labels)
+        
+        shape = (self.rows, self.columns)
+        self.matrix = np.zeros(shape)  
+        
+        
+    def loadReplay(self,replay,start=None,end=None):
+        """
+        Populates the event matrix with data from the replay's event log.
+        The default is to not change the shape of the event matrix. 
+        """
+        #Use provided arguments to change the shape of the event matrix
+        if start:
+            self.start = start
+        if end:
+            self.end = end
+            
+        #No replay was previously loaded and the end was not specified.
+        #Set the end to the last frame of the replay. This assumes that the
+        #user will never want to have a gamelog object that has a replay and
+        #an empty event matrix. It would be preferable to use enumerations to
+        #have a special value to indicate that a gamelog's matrix should be
+        #empty even if the log has a replay.
+        if self.end == 0:
+            self.end = replay.frames
+        
+        self.initializeMatrix()
+        
         for event in replay.events:
-            if hasattr(event, "pid") and event.pid < self.players \
-            and event.frame < self.end and event.frame >= self.start:
-                row = event.frame/self.fpr
-                col = classify(event)
+            #Ignore events that aren't assigned any index 
+            if self.classifier.eventIndex(event):
+                row = floor(event.frame/self.fpr)
+                col = self.classifier.eventIndex(event)
                 self.matrix[row,col] += 1 
                     
     def toVector(self):
@@ -61,7 +99,7 @@ class gamelog:
         """
         return self.matrix[:,column]
                 
-    def __getitem__(self, (row, col)):
+    def __getitem__(self,(row,col)):
         """
         Returns the event count at the specified index. The column corresponds
         to the classification of the event and the row corresponds to the time
