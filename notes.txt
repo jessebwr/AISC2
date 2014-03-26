@@ -1,0 +1,43 @@
+decision: change the gamelog class to keep track of events in different matrices for different players
+
+pros: 
+makes it easier to divide gamelogs by player
+makes it easier to remove noise from actions by pseudoplayers
+
+cons:
+adds additional complexity to the gamelog class 
+not all events have player IDs (just put these event into their own matrix) 
+
+what we need:
+a data member to store the number of players in the replay
+a list of event matrices instead of a single event matrix
+rewrite the loadReplay method to divide events into separate matrices
+rewrite the initializeMatrix method to initialize multiple event matrices
+
+optional extras:
+a list of players or a map of players to corresponding matrices
+
+events that do have pid:
+ability events
+targetpointcommand events (right click)
+camera events
+chat events
+selection events
+control group events
+tracker events
+
+events that do not have pid:
+unit positions update events
+unit born events
+unit state change events (unit death, construction completion, burrowing, etc.)
+
+note: 
+unit born events have control_pid and upkeep_pid that correspond to pid
+tracker events index pid from 1, the rest from 0
+?what about unit owner change events (neural parasite) 
+
+all game events have pid
+tracker events don't have pid except:
+	upgrade complete events
+	player stats events
+	player setup events
