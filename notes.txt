@@ -24,7 +24,6 @@ camera events
 chat events
 selection events
 control group events
-tracker events
 
 events that do not have pid:
 unit positions update events

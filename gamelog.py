@@ -18,22 +18,44 @@ class gamelog:
     the index of a column represents a unique action or a group of actions. The 
     value at an index (i,j) represents the number of times an action from group 
     j was executed during the time frame i.  
+    
+    A StarCraft II replay contains the following data:
+        Initial state
+        Input events
+        Output events
+        
+    Input events encode the actions of the players in the game and come in two
+    flavors: 
+        Game events: these actually affect the state of the game. These events
+            are used by the StarCraft II engine to reconstruct a game from a 
+            replay file
+        Message events: records messages and pings sent to other players. This
+            class ignores these events since we won't be using them for
+            classification tasks
+        
+    Output events (tracker events) periodically provide game state information.
+    They record important non-player events that happen in game and provide
+    snapshots of the game state at regular intervals of time. These are
+    unneccesary for reconstructing gamestate but may provide useful features
+    for classification. 
+    
+    This gamelog class should parse the data in the replay file so that the 
+    game events are stored separately from the tracker events and the events
+    for each player are stored separately. This allows for easy access. 
     """
     
-    def __init__(self,classifier,replay=None,start=0,end=None,framesPerRow=16):
+    def __init__(self,classifier,replay,start=0,end=None,framesPerRow=16):
         """
         Extracts and stores data about the replay into an instance of gamelog.
         The events of the replay file are stored within a matrix. 
         """
-        #Crops the event log using the specified frames. This is necessary to 
-        #use the event matrix as a feature vector for classification.
-        self.start = start
+        #Crops the event log at provided start and end frames. 
+        #This is necessary to use the event matrix as a feature vector for 
+        #classification.
         
+        self.start = start
         if end: #Use the provided argument
             self.end = end
-        elif not replay: #The log was initialized with no replay. Start = End.
-            assert start == 0
-            end = 0
         else: #Use the whole replay 
             self.end = replay.frames
             
@@ -41,79 +63,54 @@ class gamelog:
         self.classifier = classifier
            
         self.fpr = framesPerRow
-        self.initializeMatrix()
         
-        if self.replay:
-            self.loadReplay(replay)
+        self.loadReplay(replay)
             
     def initializeMatrix(self):
         """
-        Sets the event matrix to a matrix of zeroes.
+        Returns an event matrix with the correct shape 
         """
-        self.rows = ceil((self.end - self.start)/self.fpr)
-        self.columns = len(self.classifier.labels)
-        
+        rows = ceil((self.end - self.start)/self.fpr)
+        columns = len(self.classifier.labels)
         shape = (self.rows, self.columns)
-        self.matrix = np.zeros(shape)  
-        
+        return np.zeros(shape)  
         
     def loadReplay(self,replay,start=None,end=None):
         """
         Populates the event matrix with data from the replay's event log.
         The default is to not change the shape of the event matrix. 
         """
-        #Use provided arguments to change the shape of the event matrix
+        #Change where to crop 
         if start:
             self.start = start
         if end:
             self.end = end
             
-        #No replay was previously loaded and the end was not specified.
-        #Set the end to the last frame of the replay. This assumes that the
-        #user will never want to have a gamelog object that has a replay and
-        #an empty event matrix. It would be preferable to use enumerations to
-        #have a special value to indicate that a gamelog's matrix should be
-        #empty even if the log has a replay.
-        if self.end == 0:
-            self.end = replay.frames
+        ###Find the names of the players and store them in a list
+        self.players = replay.players
         
-        self.initializeMatrix()
+        self.actions = [] #Game events for each player
+        self.trackers = [] #Tracker events for each player
         
+        #Initialize event matrix for each player and for tracker/action events
+        for i in range(len(self.players)):
+            self.actions.append(self.initializeMatrix())
+            self.trackers.append(self.initializeMatrix())
+            
+        #For events that don't correspond to any one player
+        self.trackers.append(self.initializeMatrix())
+        
+        self.counted = [] #String repr for each event counted
+        self.ignored = [] #String repr for each event ignored
+        
+        ###Rewrite this to parse events separately 
         for event in replay.events:
             #Ignore events that aren't assigned any index 
             if self.classifier.eventIndex(event):
                 row = floor(event.frame/self.fpr)
                 col = self.classifier.eventIndex(event)
                 self.matrix[row,col] += 1 
-                    
-    def toVector(self):
-        """
-        Reshapes the event matrix and returns it as a one dimensional feature
-        vector. 
-        """
-        return np.reshape(self.matrix, self.rows*self.columns)
-        
-    def getColumn(self,column):
-        """
-        Returns a column of the event matrix as a one dimnesional vector.
-        """
-        return self.matrix[:,column]
-                
-    def __getitem__(self,(row,col)):
-        """
-        Returns the event count at the specified index. The column corresponds
-        to the classification of the event and the row corresponds to the time
-        that the event took place. 
-        """
-        return self.matrix[row,col]
-        
-    def __repr__(self):
-        """
-        Prints the event matrix. 
-        """
-        matrix = self.matrix.tolist()
-        result = ""
-        for row in matrix:
-            result += "    ".join(str(i) for i in row)
-            result += '\n'
-        return result
+                self.counted.append(str(event))
+            else:
+                #Note that this event was ignored. 
+                self.ignored.append(str(event))

@@ -10,10 +10,7 @@ import sc2reader
 import sys
 import json
 import os.path
-from os import rename
 from sc2reader.factories import SC2Factory
-from sc2reader.exceptions import MPQError, CorruptTrackerFileError
-from datetime import datetime
 
 mainpath = 'C:\Users\Henry\Documents\HMC Junior\AI\AISC2'
 replaypath = 'C:\Users\Henry\Documents\HMC Junior\AI\AISC2\Replays'
@@ -45,7 +42,7 @@ def main():
     #print json.dumps(getEventTypes(replay, "game"), indent = 2)
 
     #Print out the attributes contained in the sc2reader class
-    printFormattedList(getAttributesWithValues(replay, True))
+    #printFormattedList(getAttributesWithValues(replay, True))
 
     #Print out the abilities used in the replay
     #print json.dumps(getAbilityIDs(replay), indent = 2)
@@ -54,65 +51,15 @@ def main():
     #print printFormattedList(getCommandEvents(replay))
     
     #Add new ability IDs to the json archive
-    #archiveAbilityIDs('abilities.txt')
-    
-    #Classify ability IDs as micro or macro
-    #classifyMicroMacro('abilities.txt', 'micromacro.txt')
-    
-def classifyMicroMacro(archiveFile, outfile, path=replaypath):
-    '''
-    Classifies abilities within an archive as "Micro" or "Macro" or neither.
-    
-    Prompts the user to give a classification to each ability in the archive.
-    '''
-    
-    fullpath = os.path.join(path, archiveFile)
-    outpath = os.path.join(path, outfile)
-    
-    #Read in abilities from json file
-    with open(fullpath, 'r') as infile: 
-        archive = json.load(infile)
-    infile.close()
-    
-    #Read in existing classifications from outfile if it exists
-    try:
-        with open(outpath, 'r') as infile:
-            classifications = json.load(infile)
-        infile.close()
-    except IOError:
-        classifications = {}
-    
-    #Prompt the user to classify each ability
-    for ID in archive.keys():
-        if ID not in classifications:
-            classification = ""
-            prompt = "Please classify (micro/macro): %s. Type \"stop\" to quit. \n" % archive[ID]
-            classification = raw_input(prompt)
-            if classification in ["micro", "macro", "none"]:
-                classifications[ID] = classification
-            elif classification == "stop":
-                break
-            else:
-                print "Invalid input. Skipping to next ability."
-      
-    #Write the result into the specified outfile  
-    with open(outpath, 'w') as outfile:
-        print "Writing data to %s" % outfile
-        json.dump(classifications, outfile)
-        
-    return
+    archiveAbilityIDs('abilities.txt')
     
 def archiveAbilityIDs(filename, replay=None, path=replaypath):
     '''
     Stores the abilities used in a replay to a json text file.
     
     If no replay is specified, loop through all of the files in the directory. 
-    '''
-    #Keep track of execution time
-    startime = datetime.now()
-        
+    '''        
     filepath = os.path.join(path, filename)
-    newIDFound = False
     
     #Read in existing IDs from the archive file into a dictionary
     try:
@@ -127,30 +74,28 @@ def archiveAbilityIDs(filename, replay=None, path=replaypath):
     if replay != None:
         getAbilityIDs(replay, archive)
     else:
-        #Keep track of the files that fail to load
-        failed = []
-        
+        print "Loading files"
         for filename in os.listdir(os.path.join('.',path)):
             #Update the archive with abilities from each replay in the directory
             if os.path.splitext(filename)[-1] == '.SC2Replay':
                 fullpath = os.path.join(path, filename)
                 try:
+                    sys.stdout.write('.')
                     replay = sc2reader.load_replay(fullpath)
-                    print "Loading replay %s" % replay.filename
                     getAbilityIDs(replay, archive)
                 except:
-                    print "Failed to load replay %s" % fullpath 
-                    failed.append(filename)
+                    #Remove the replay files that fail to load
+                    try:
+                        "Deleting file %s" % filename
+                        os.remove(fullpath)
+                    except WindowsError:
+                        print "Failed to delete file %s" % filename
                 
     #Write ability IDs to archive file
     print "Printing new IDs"
     with open(filepath, 'w') as outfile:
         json.dump(archive, outfile)
-        outfile.close()
-        
-    print "Function ran in time : %s" % (datetime.now() - startime)
-    printFormattedList(failed)
-    
+        outfile.close()    
 
 def getAttributes(object, includeUnderscores=False):
     '''Returns a list of the object's attributes and methods.
