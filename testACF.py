@@ -23,7 +23,7 @@ targets = np.load('Y_apm.npy')
 #Compute the acf of the data
 X = [(acf(x, 50), targets[i]) for i, x in enumerate(data) \
                             if not np.isnan(sum(acf(x,50)))]
-data = np.array([x[0] for x in X])
+                            
 targets = np.array([x[1] for x in X])
 X_train, X_test, Y_train, Y_test = train_test_split(data, targets,
                                                     test_size=0.2,

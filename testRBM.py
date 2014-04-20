@@ -1,7 +1,7 @@
 #testRBM.py
 #Author: Henry Tay and Jesse Watts-Russell
 
-#Overview: THis is a script to test whether using  a restricted Boltzmann
+#Overview: This is a script to test whether using  a restricted Boltzmann
 #for feature transformation improves the performance of an SVM classifier on
 #the APM data. 
 
