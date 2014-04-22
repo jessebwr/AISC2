@@ -20,14 +20,10 @@ from sklearn.svm import SVC
 mainPath = 'C:\Users\Henry\Documents\HMC Junior\AI\AISC2' 
 relayPath = os.path.join(mainPath, 'Replays')
 
-#The SC2 engine runs at 16 frames per second
-framesPerMinute = 960
-#Each feature represents the number of events within each 16 frame interval
-fpr = 16
-#Matches any string inside parentheses
-pattern = r"(?<=\().+?(?=\))"
-#Race classification dictionary
-race = {"Protoss":0, "Terran":1, "Zerg":2}
+framesPerMinute = 960 #The SC2 engine runs at 16 frames per second
+fpr = 16 #Each feature represents the number of events within each 16 frame interval
+pattern = r"(?<=\().+?(?=\))" #Matches any string inside parentheses
+race = {"Protoss":0, "Terran":1, "Zerg":2} #Race classification dictionary
 
 def abilityID(event):
     """

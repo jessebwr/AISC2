@@ -4,10 +4,10 @@
 #Overview: A class that stores event sequence data from a StarCraft II 
 #replay files as a sparse matrix of integers.
 
-import numpy as np
 from __future__ import division
+
+import numpy as np
 from math import ceil, floor
-from classifier import *
 
 class gamelog:
     """
@@ -44,7 +44,7 @@ class gamelog:
     for each player are stored separately. This allows for easy access. 
     """
     
-    def __init__(self,classifier,replay,start=0,end=None,framesPerRow=16):
+    def __init__(self,classifier,columns,replay=None,start=0,end=None,framesPerRow=16):
         """
         Extracts and stores data about the replay into an instance of gamelog.
         The events of the replay file are stored within a matrix. 
@@ -56,22 +56,26 @@ class gamelog:
         self.start = start
         if end: #Use the provided argument
             self.end = end
-        else: #Use the whole replay 
+        elif not replay == None: #Use the whole replay 
             self.end = replay.frames
+        else: #No replay, use start = end = 0
+            self.end = 0
+            
+        self.fpr = framesPerRow
+            
+        self.rows = ceil((self.end - self.start)/self.fpr)
+        self.columns = columns
             
         #The classifier sorts events into columns of the matrix
         self.classifier = classifier
-           
-        self.fpr = framesPerRow
-        
-        self.loadReplay(replay)
+               
+        if not replay == None:
+            self.loadReplay(replay)
             
     def initializeMatrix(self):
         """
         Returns an event matrix with the correct shape 
         """
-        rows = ceil((self.end - self.start)/self.fpr)
-        columns = len(self.classifier.labels)
         shape = (self.rows, self.columns)
         return np.zeros(shape)  
         
@@ -85,9 +89,11 @@ class gamelog:
             self.start = start
         if end:
             self.end = end
+        
+        self.rows = ceil((self.end - self.start)/self.fpr)
             
-        ###Find the names of the players and store them in a list
-        self.players = replay.players
+        #Find the names of the players and store them in a list
+        self.players = [str(player) for player in replay.players]
         
         self.actions = [] #Game events for each player
         self.trackers = [] #Tracker events for each player
@@ -103,14 +109,20 @@ class gamelog:
         self.counted = [] #String repr for each event counted
         self.ignored = [] #String repr for each event ignored
         
-        ###Rewrite this to parse events separately 
-        for event in replay.events:
-            #Ignore events that aren't assigned any index 
-            if self.classifier.eventIndex(event):
+        for event in replay.game_events:
+            if event.pid < len(self.players):
+                events = self.actions[event.pid] # The event matrix for that player
+                shape = events.shape #The shape of the matrix
                 row = floor(event.frame/self.fpr)
                 col = self.classifier.eventIndex(event)
-                self.matrix[row,col] += 1 
-                self.counted.append(str(event))
+                if not col == None and row < shape[0] and col < shape[1]:
+                    events[row,col] += 1
+                    self.counted.append(str(event))
+                else: self.ignored.append(str(event))
             else:
-                #Note that this event was ignored. 
                 self.ignored.append(str(event))
+                
+        for event in replay.tracker_events:
+            #Not yet implemented!
+            #Unlike game events tracker events are not always associated with a player. 
+            self.ignored.append(str(event))

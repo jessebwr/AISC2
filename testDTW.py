@@ -2,9 +2,8 @@
 #Author: Henry Tay and Jesse Watts-Russell
 #Dynamic time warping code adapted from StackOverFlow : Stefan Novak
 
-#Overview: This is a script to test whether using  a restricted Boltzmann
-#for feature transformation improves the performance of an SVM classifier on
-#the APM data. 
+#Overview: Using K-Nearest-Neighbors with a dynamic time warping similarity
+#measure. 
 
 #For dynamic time warping
 import numpy as np
