@@ -69,7 +69,7 @@ def parseData(path):
     return (data, targets)
 
 #Parse and store data 
-data, targets = parseData(replayPath)
+data, targets = parseData(testPath)
 print "Saving data. . ."
 np.save('X_workersupply', data)
 np.save('y_workersupply', targets)
