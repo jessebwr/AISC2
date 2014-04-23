@@ -110,8 +110,8 @@ class gamelog:
         self.ignored = [] #String repr for each event ignored
         
         for event in replay.game_events:
-            if str(event.player) in self.players:
-                playerNumber = self.players.index(event.player)
+            if hasattr(event, 'player') and str(event.player) in self.players:
+                playerNumber = self.players.index(str(event.player))
                 events = self.actions[playerNumber] # The event matrix for that player
                 shape = events.shape #The shape of the matrix
                 row = floor(event.frame/self.fpr)
