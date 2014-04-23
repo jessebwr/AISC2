@@ -71,10 +71,10 @@ def parseData(path):
 #Parse and store data 
 import time
 start_time = time.time()
-data, targets = parseData(testPath)
+data, targets = parseData(replayPath)
 print "Running time:", time.time() - start_time
 print "Saving data. . ."
-np.save('X_apm', data)
-np.save('y_apm', targets)
+np.save('X_workersupply', data)
+np.save('y_workersupply', targets)
 
 

@@ -24,7 +24,7 @@ cv = StratifiedKFold(Y_train, n_folds=4)
 gamma_range = 10.0**np.arange(-3,3)
 C_range = 10.0**np.arange(-3,3)
 parameters = {"gamma" : gamma_range, "C": C_range}
-grid = GridSearchCV(SVC(), param_grid = parameters, cv=cv)
+grid = GridSearchCV(SVC(), param_grid = parameters, cv=cv, verbose = True)
 
 #Fit to the training data
 grid.fit(X_train, Y_train)

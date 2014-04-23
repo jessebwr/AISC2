@@ -35,10 +35,10 @@ def ability_id(event):
         return 0
         
 #Parse the event log
-with open('workersupply.txt') as infile:
+with open('micromacro.txt') as infile:
     labels = json.load(infile) 
 parser = eventParser(labels, ability_id) #Classify worker and supply build events
-log = gamelog(parser,3,start=0,end=frames,framesPerRow=fpr)
+log = gamelog(parser,2,start=0,end=frames,framesPerRow=fpr)
 
 #Load and parse the training data
 def parseData(path):
@@ -74,7 +74,7 @@ start_time = time.time()
 data, targets = parseData(testPath)
 print "Running time:", time.time() - start_time
 print "Saving data. . ."
-np.save('X_apm', data)
-np.save('y_apm', targets)
+np.save('X_micromacro', data)
+np.save('y_micromacro', targets)
 
 
