@@ -1,0 +1,61 @@
+race classifications
+
+4000 data points
+	race : train/test
+	protoss: 1059/267
+	terran: 950/238
+	zerg: 1191/295
+
+80/20 train/test split
+hyperparameters fitted by Stratified-kFold cross validation
+
+apm:
+
+best parameters: C - 1.0, gamma - 0.001
+
+number support vectors: 
+	protoss: 852
+	terran: 806
+	zerg: 753
+
+training set accuracy: .836
+test set accuracy: .738
+
+test set accuracy by class:
+	protoss: (186, 51, 30) / (0.697, 0.191, 0.112)
+	terran: (55, 155, 28) / (0.231, 0.651, 0.118)
+	zerg: (26, 20, 249) / (0.088, 0.068, 0.844) 
+
+micro/macro:
+
+best parameters: C - 1.0, gamma - 0.001
+
+number support vectors:
+	protoss: 735
+	terran: 759
+	zerg: 828
+
+training set accuracy: 0.965
+test set accuracy: 0.899
+
+test set accuracy by class:
+	protoss: (243, 11, 13)
+	terran: (22, 203, 13)
+	zerg: (11, 11, 273)
+
+worker&supply:
+
+best parameters: C - 10.0, gamma - 0.001
+
+number support vectors:
+	protoss: 569 
+	terran: 496
+	zerg: 557
+
+training set accuracy: 0.993
+test set accuracy: 0.950
+
+test set accuracy by class:
+	protoss: (252, 12, 3)
+	terran: (5, 226, 7)
+	zerg: (7, 6, 282) 
