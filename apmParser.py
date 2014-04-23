@@ -40,6 +40,39 @@ with open('workersupply.txt') as infile:
 parser = eventParser(labels, ability_id) #Classify worker and supply build events
 log = gamelog(parser,3,start=0,end=frames,framesPerRow=fpr)
 
+def winner(replay):
+    """
+    Returns a label for each player in the replay. Returns 1 if the player is
+    the winner of the replay and false otherwise. 
+    """
+    gameWinner = str(replay.winner.players[0])
+    isPlayer1Winner = 0
+    isPlayer2Winner = 0
+    if gameWinner == str(replay.players[0]):
+        isPlayer1Winner = 1
+    if gameWinner == str(replay.players[1]):
+        isPlayer2Winner = 1
+    return (isPlayer1Winner, isPlayer2Winner)
+
+def race(replay):
+    """
+    Returns a label for each player in the replay. Returns 0 if the player is
+    Protoss, 1 if the player is Terran and 2 if the player is Zerg.
+    """
+    player1race = re.search(pattern, log.players[0])
+    player2race = re.search(pattern, log.players[1])
+    if player1race.group(0) in race:
+        player1race = race[player1race.group(0)]
+    else:
+        player1race = None
+        
+    if player2race.group(0) in race:
+        player2race = race[player2race.group(0)]
+    else:
+        player2race = None
+        
+    return (player1race, player2race)
+
 #Load and parse the training data
 def parseData(path):
     """
@@ -56,13 +89,12 @@ def parseData(path):
                 print "Loading replay %s" % replay.filename
                 log.loadReplay(replay)
                 if len(replay.players) == 2:
-                    player1race = re.search(pattern, log.players[0])
-                    player2race = re.search(pattern, log.players[1])
-                    if player1race.group(0) in race:
-                        targets.append(race[player1race.group(0)])
+                    player1class, player2class = winner(replay)
+                    if not player1class == None:
+                        targets.append(player1class)
                         data.append(log.actions[0].flatten())
-                    if player2race.group(0) in race:
-                        targets.append(race[player2race.group(0)])
+                    if not player2class == None:
+                        targets.append(player2class)
                         data.append(log.actions[1].flatten())
             except:
                 print "Failed to load replay %s" % fullpath 

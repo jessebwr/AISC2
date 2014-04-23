@@ -6,8 +6,8 @@ from sklearn.svm import SVC
 from sklearn.grid_search import GridSearchCV
 
 #Load the data
-data = np.load('X_workersupply.npy')
-targets = np.load('Y_workersupply.npy')
+data = np.load('X_apm.npy')
+targets = np.load('Y_apm.npy')
 X_train, X_test, Y_train, Y_test = train_test_split(data, targets,
                                                     test_size=0.2,
                                                     random_state=0)
