@@ -14,8 +14,8 @@ Our AI final project that uses Support Vector Machines to learn over characteris
 The archive file comes with the datasets with different features already parsed into .npy files. Simply run the testSVM file to execute the script that trains and evaluates an SVM classifier on this data. In order to change the features used, change the file names in lines 9 and 10 of testSVM. The prefix X indicates the features and the prefix Y indicates the classes (targets). 
 
 ## Abbreviations
-wl - win/loss
-mm - micro/macro
-ws - worker/supply 
-5-32 - first five minutes of gameplay/32 frames per window
+1. wl - win/loss
+2. mm - micro/macro
+3. ws - worker/supply 
+4. 5-32 - first five minutes of gameplay/32 frames per window
 
