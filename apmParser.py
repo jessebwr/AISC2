@@ -35,10 +35,11 @@ def ability_id(event):
         return 0
         
 #Parse the event log
-with open('workersupply.txt') as infile:
+with open('micromacro.txt') as infile:
     labels = json.load(infile) 
-parser = eventParser(labels, ability_id) #Classify worker and supply build events
-log = gamelog(parser,3,start=0,end=frames,framesPerRow=fpr)
+#parser = eventParser() #Default uses APM as features
+parser = eventParser(labels, ability_id) #Classify micro/macro
+log = gamelog(parser,1,start=0,end=frames,framesPerRow=fpr)
 
 def winner(replay):
     """
@@ -90,12 +91,20 @@ def parseData(path):
                 log.loadReplay(replay)
                 if len(replay.players) == 2:
                     player1class, player2class = winner(replay)
+                    #For classifying win/loss
+                    if not player1class == None and not player2class == None:
+                        targets.append(player1class)
+                        events1 = log.actions[0].flatten()
+                        events2 = log.actions[1].flatten()
+                        data.append(np.concatenate((events1,events2)))
+                    """ #Use for classifying race
                     if not player1class == None:
                         targets.append(player1class)
                         data.append(log.actions[0].flatten())
                     if not player2class == None:
                         targets.append(player2class)
                         data.append(log.actions[1].flatten())
+                    """
             except:
                 print "Failed to load replay %s" % fullpath 
     return (data, targets)
@@ -103,10 +112,10 @@ def parseData(path):
 #Parse and store data 
 import time
 start_time = time.time()
-data, targets = parseData(testPath)
+data, targets = parseData(replayPath)
 print "Running time:", time.time() - start_time
 print "Saving data. . ."
-np.save('X_apm', data)
-np.save('y_apm', targets)
+np.save('X_micromacro_wl', data)
+np.save('y_micromacro_wl', targets)
 
 
