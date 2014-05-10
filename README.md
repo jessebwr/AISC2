@@ -10,3 +10,12 @@ Our AI final project that uses Support Vector Machines to learn over characteris
 3. gamelog is the class that performs vectorization. 
 4. eventParser is a class that performs the mapping of actions to action classes during feature extraction. 
 
+## Steps to use
+The archive file comes with the datasets with different features already parsed into .npy files. Simply run the testSVM file to execute the script that trains and evaluates an SVM classifier on this data. In order to change the features used, change the file names in lines 9 and 10 of testSVM. The prefix X indicates the features and the prefix Y indicates the classes (targets). 
+
+## Abbreviations
+wl - win/loss
+mm - micro/macro
+ws - worker/supply 
+5-32 - first five minutes of gameplay/32 frames per window
+
